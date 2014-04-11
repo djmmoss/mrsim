@@ -1,0 +1,21 @@
+// package chibi.comm
+
+// import Chisel._
+
+// /**
+//  * OutFIFO
+//  *
+//  * TODO :	*Make Work
+//  *
+//  *
+//  * @param 	Int 			$b_str			Number of String Bytes
+//  * @param 	Int 			$n_str 			Number of Strings
+//  * @param 	Int 			$n_int	 		Number of Integers
+//  * @param 	Int 			$n_lng			Number of Longs
+//  * @param 	Int 			$n_flt			Number of Floats
+//  * @param 	Int 			$n_dbl	 		Number of Doubles
+//  * @param 	Int 			$n_bol			Number of Bools	
+//  */
+
+// class OutFifo(m) extends Module {
+// 	val rx_dat
