@@ -39,7 +39,6 @@ if __name__ == "__main__":
 
 #define IN_FIFO "/tmp/hw_in_pipe"
 #define OUT_FIFO "/tmp/hw_out_pipe"
-#define FLAGIN_NAME "/tmp/flagIn.lock"
 #define FLAGOUT_NAME "/tmp/flagOut.lock"
 #define SIZE 16"""
 

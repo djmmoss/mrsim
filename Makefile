@@ -42,7 +42,7 @@ SimScript: testSim
 ScriptSetup:
 	cp $(PATHTO)com/usyd/mrsim/scripts/*-sim.sh /tmp/.
 
-testInterface: setupIdentity hardware makeFifo
+testInterface: setupIdentity hardware
 	/tmp/start-sim.sh
 	$(SBT) "run-main com.usyd.mrsim.np_test"
 	/tmp/stop-sim.sh
@@ -53,7 +53,7 @@ testInterface: setupIdentity hardware makeFifo
 #------------------ WordCount ------------------#
 #===============================================#
 
-wordcount: setupWordCount hardware makeFifo
+wordcount: setupWordCount hardware
 	/tmp/start-sim.sh
 	$(SBT) $(JNILIB) "run-main com.usyd.mrsim.example.WordCount ./data/words_0.txt output"
 	/tmp/stop-sim.sh
@@ -70,7 +70,7 @@ wordcountHardware: setupWordCount
 #-------------------- Life ---------------------#
 #===============================================#
 
-life: setupLife hardware makeFifo
+life: setupLife hardware
 	/tmp/start-sim.sh
 	$(SBT) $(JNILIB) "run-main com.usyd.mrsim.example.Life ./data/numbers.txt output"
 	/tmp/stop-sim.sh
@@ -87,7 +87,7 @@ lifeHardware: setupLife
 #------------------ Identity -------------------#
 #===============================================#
 
-identity: setupIdentity hardware makeFifo
+identity: setupIdentity hardware
 	/tmp/start-sim.sh
 	$(SBT) "run-main com.usyd.mrsim.example.Identity ./data/words_0.txt output"
 	/tmp/stop-sim.sh
@@ -138,7 +138,7 @@ awsIdentity: makeAwsIdentity
 	hadoop jar ./target/scala-2.10/Identity-assembly-1.0.jar com.usyd.mrsim.example.Identity words output1 scoobi
 	cp loc_build build.sbt
 
-makeAwsIdentity: setupIdentity hardware makeFifo
+makeAwsIdentity: setupIdentity hardware
 	/tmp/start-sim.sh
 
 hdfsWords:
@@ -187,11 +187,6 @@ hdfsNumbers:
 	hadoop dfs -copyFromLocal ./data/words_9.txt words &>/dev/null
 
 
-makeFifo:
-	mkfifo /tmp/hw_in_pipe
-	mkfifo /tmp/hw_out_pipe
-	chmod 666 /tmp/hw_in_pipe
-	chmod 666 /tmp/hw_out_pipe
 
 #===============================================#
 #-------------------- Clean --------------------#
