@@ -107,13 +107,13 @@ identityHardware: setupIdentity
 localTest:
 	cd cluster_test; cp loc_build build.sbt
 	#cd cluster_test; $(SBT) "run-main WordCountTest ../data/words_0.txt outputWord"
-	cd cluster_test; $(SBT) "run-main LifeTest ../data/numbers.txt outputLife"
+	cd cluster_test; $(SBT) "run-main LifeTest ../data/numbers/numbers_0.txt outputLife"
 
 awsTest:
 	cd cluster_test; cp aws_build build.sbt
 	cd cluster_test; sbt assembly
 	#cd cluster_test; hadoop jar dd./target/scala-2.10/WordCountTest-assembly-1.0.jar words output1 scoobi
-	cd cluster_test; hadoop jar ./target/scala-2.10/ScoobiTest-assembly-1.0.jar numbers output1 scoobi
+	cd cluster_test; hadoop jar ./target/scala-2.10/ScoobiTest-assembly-1.0.jar LifeTest numbers output1 scoobi
 	cd cluster_test; cp loc_build build.sbt
 
 hkuTest:
@@ -143,48 +143,11 @@ makeAwsIdentity: setupIdentity hardware
 
 hdfsWords:
 	hadoop dfs -mkdir words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_0.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_1.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_2.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_3.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_4.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_5.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_6.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_7.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_8.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_9.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_10.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_11.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_12.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_13.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_14.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_15.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_16.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_17.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_18.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_19.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_20.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_21.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_22.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_23.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_24.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_30.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_31.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_32.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_33.txt words &>/dev/null
+	hadoop dfs -copyFromLocal ./data/words/* words &>/dev/null
 
 hdfsNumbers:
 	hadoop dfs -mkdir numbers &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_0.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_1.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_2.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_3.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_4.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_5.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_6.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_7.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_8.txt words &>/dev/null
-	hadoop dfs -copyFromLocal ./data/words_9.txt words &>/dev/null
+	hadoop dfs -copyFromLocal ./data/numbers/* numbers &>/dev/null
 
 
 
