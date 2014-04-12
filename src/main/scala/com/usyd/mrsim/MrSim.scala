@@ -54,13 +54,8 @@ trait MrSim extends hardwareTranslator {
     val word = new Array[Byte](GBFIFOSize)
     val lock = new FileLock(new File(pipeOut))
     while(lock.tryLock == false){}
-    Files.createFile(Paths.get(flagOutLoc))
-		val pw = new RandomAccessFile(pipeOut, "rw")
-    for(i <- 0 until numRead) {
-      if(i != 0)
-        Files.createFile(Paths.get(flagOutLoc))
-      pw.read(word,0, GBFIFOSize)
-    }
+	val pw = new RandomAccessFile(pipeOut, "rw")
+    pw.read(word,0, GBFIFOSize)
     pw.close()
     lock.destroy()
     var decode = new String(word.map(_.toChar)) 

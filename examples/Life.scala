@@ -13,7 +13,7 @@ object Life extends ScoobiApp with MrSim {
 		val lines = fromTextFile(args(0))
 
 		val counts = lines
-            .map(w => LifeMapper(w.trim.toInt))
+            .map(w => LifeMapper(w.toInt))
 		  .groupByKey
 		  .combine(Sum.int)
 		counts.toTextFile(args(1)).persist

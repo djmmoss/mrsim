@@ -29,3 +29,10 @@ resolvers ++= Seq(Resolver.sonatypeRepo("releases"),
                 "cloudera"             at "https://repository.cloudera.com/content/repositories/releases",
                 "ch-build" at "https://repository.cloudera.com/content/groups/cdh-build/")
 
+mergeStrategy in assembly <<= (mergeStrategy in assembly) { mergeStrategy => {
+    case entry => {
+        val strategy = mergeStrategy(entry)
+        if (strategy == MergeStrategy.deduplicate) MergeStrategy.first
+        else strategy
+    }
+}}

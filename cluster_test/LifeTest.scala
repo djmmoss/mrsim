@@ -14,14 +14,17 @@ object LifeTest extends ScoobiApp {
     count.toTextFile(args(1)).persist
     }
     def lifeMap(in : String) : (String, Int) = {
-        val initialMatrix = padZero(in.toLong.toBinaryString, 64).split("").drop(1).zipWithIndex.map(w => if(w._1 == "1") (w._2/8, w._2%8) else (16,16)).filter(_ != (16,16)).toList
+        val initialMatrix = padZero(in, 64).split("").drop(1).zipWithIndex.map(w => if(w._1 == "1") (w._2/8, w._2%8) else (16,16)).filter(_ != (16,16)).toList
         var civilization = new Civilization(initialMatrix, 8)
 
         civilization.printGrid
-        for (period <- 1 to 100) {
+        for (period <- 1 to 99) {
             civilization = civilization.tick
         }
-        val out = civilization.printGrid
+        val out = civilization.printGrid.drop(1)
+        val fw = new FileWriter("res_final.txt", true)
+        fw.write(out + "\n")
+        fw.close()
         (out, 1)
     }
 

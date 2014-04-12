@@ -100,7 +100,7 @@ if __name__ == "__main__":
   EMU_NEW2="""
 void read_eval_print (FILE *f, FILE *teefile = NULL) {
   int fd_in = open(IN_FIFO, O_RDONLY | O_NONBLOCK);
-
+  int count = 0;
   for (;;) {
     node_write("MrSimSimulation.io_enq_val", "0x0");
     get_val(f, fd_in);
@@ -108,12 +108,13 @@ void read_eval_print (FILE *f, FILE *teefile = NULL) {
 
     char *val_read = new char[1];
     strcpy(val_read, node_read("MrSimSimulation.io_deq_val").c_str());
-    if ((access(FLAGOUT_NAME, F_OK) != -1) && (strcmp(val_read,"0x1") == 0)) {
-      rename(FLAGOUT_NAME, "/tmp/bogos.lock");
+    if ((strcmp(val_read,"0x1") == 0) && (count > 10)) {
       send_val(f);
+      count = 0;
     } else {
       node_write("MrSimSimulation.io_deq_rdy", "0x0");
     }
+    count++;
     free(val_read);
     int new_delta = step(0, 1, f, true);
   }
