@@ -31,7 +31,7 @@ trait MrSim extends hardwareTranslator {
 
   // Simulation Parameters
   val ctlFifo : Int = 4
-  val numMap : Int = 1
+  val numMap : Int = 2
   val simFifo: Int = 4
   val numRead: Int = 1
 

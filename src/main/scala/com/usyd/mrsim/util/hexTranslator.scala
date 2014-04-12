@@ -8,7 +8,7 @@ trait hexTranslator {
     in match {
       case x: String => asciiToHex(x, size)
       case x: Int => intToHex(x, size-4)
-      case x: Long => longToHex(x, size)
+      case x: Long => longToHex(x, size-2)
       case x: Float => floatToHex(x, size)
       case x: Double => doubleToHex(x, size)
       case x => "Unsupported Type"

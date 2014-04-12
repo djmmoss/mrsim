@@ -72,7 +72,7 @@ wordcountHardware: setupWordCount
 
 life: setupLife hardware
 	/tmp/start-sim.sh
-	$(SBT) $(JNILIB) "run-main com.usyd.mrsim.example.Life ./data/numbers.txt output"
+	$(SBT) "run-main com.usyd.mrsim.example.Life ./data/numbers/numbers_0.txt output"
 	/tmp/stop-sim.sh
 
 setupLife:
@@ -107,7 +107,8 @@ identityHardware: setupIdentity
 localTest:
 	cd cluster_test; cp loc_build build.sbt
 	#cd cluster_test; $(SBT) "run-main WordCountTest ../data/words_0.txt outputWord"
-	cd cluster_test; $(SBT) "run-main LifeTest ../data/numbers/numbers_0.txt outputLife"
+	#cd cluster_test; $(SBT) "run-main LifeTest ../data/numbers/numbers_0.txt outputLife"
+	cd cluster_test; $(SBT) "run-main KMeansTest ../data/points/points_1.txt"
 
 awsTest:
 	cd cluster_test; cp aws_build build.sbt
@@ -139,6 +140,15 @@ awsIdentity: makeAwsIdentity
 	cp loc_build build.sbt
 
 makeAwsIdentity: setupIdentity hardware
+	/tmp/start-sim.sh
+
+awsLife: makeAwsLife
+	cp aws_build build.sbt
+	sbt assembly
+	hadoop jar ./target/scala-2.10/Identity-assembly-1.0.jar com.usyd.mrsim.example.Life numbers output1 scoobi
+	cp loc_build build.sbt
+
+makeAwsLife: setupLife hardware
 	/tmp/start-sim.sh
 
 hdfsWords:
