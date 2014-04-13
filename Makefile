@@ -169,6 +169,15 @@ awsLife: makeAwsLife
 makeAwsLife: setupLife hardware
 	/tmp/start-sim.sh
 
+awsKMeans: makeAwsKMeans
+	cp aws_build build.sbt
+	sbt assembly
+	hadoop jar ./target/scala-2.10/Identity-assembly-1.0.jar com.usyd.mrsim.example.KMeans points output1 scoobi
+	cp loc_build build.sbt
+
+makeAwsKMeans: setupKMeans hardware
+	/tmp/start-sim.sh
+
 hdfsWords:
 	hadoop dfs -mkdir words &>/dev/null
 	hadoop dfs -copyFromLocal ./data/words/* words &>/dev/null

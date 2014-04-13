@@ -11,67 +11,40 @@ import scala.sys.process._
 
 object KMeans extends ScoobiApp with MrSim {
 
-    var curCenters: List[Array[Int]] = List(Array(43, 235), Array(154, 4), Array(156, 105))
-
-    var cost = 0.0d
-
-    /* -- Grab Points from File -- */
-    // Need to modify this to accept a arbitrary number of features for each point
-
-
     def run() {
-        val points: DList[String] = fromTextFile(args(0))
+        val thePoints: DList[String] = fromTextFile(args(0))
 
-        var prevCost = 0.0d
-        val epslion = 0.0001
-        var count = 0
-        var finish = true
-        var costList :List[Double] = List()
 
-        while (finish) {
+        var curCenters : List[Array[Int]] = List()
 
-            var tempCenters : List[Array[Int]] = List()
 
-            prevCost = cost
-            cost = 0.0d
+        val bestCmap: DList[(Int, (Int, Array[Int]))] = thePoints
+        .map(classify)
+        .groupByKey
+        .combine(Reduction.apply(recenter))
 
-            val bestCmap: DList[(Int, (Int, Array[Int]))] = points
-            .map(classify)
-            .groupByKey
-            .combine(Reduction.apply(recenter))
+        bestCmap.persist.run.foreach(a => curCenters :+= a._2._2)
 
-            bestCmap.persist.run.foreach(a => tempCenters :+= a._2._2)
 
-            curCenters = tempCenters
 
-            costList:+= cost
-
-            count = count + 1
-            if ((prevCost - cost).abs < epslion && count > 1)
-                finish = false
-        }
-
-        print("\nK-Means Finished with:" + "\n\tCost:\t\t" + "%4.2f".format(cost))
-        print("\n\tCostList: \t")
-        costList.foreach(a => print("%4.2f".format(a) + "\t"))
+        print("\nK-Means Finished")
         print("\n\tCenters:\t")
         curCenters.foreach(a => {print("\n\t\t\t")
         a.foreach(b => print(b.toString + "\t"))})
-        print("\n\tIterations:\t" + count + "\n")
 
     }
+
+
+
     def classify(in: String): (Int,(Int, Array[Int])) = {
-        val pt : Array[Int] = in.split(",").map(w => w.trim.toInt)
-        val w = curCenters++Array(pt)
-        val in_h = w.map(_.map(a => padZero(a.toHexString, 2)).mkString).mkString
-        println(in_h)
+        val input = in.split(":").map(_.split(",").map(_.trim.toInt))
+        val in_h = input.map(_.map(a => padZero(a.toHexString, 2)).mkString).mkString
         val dists = toHardware(true, in_h)
-        println(dists)
-        val raw_pt = dists.split("x")(1).drop(8).drop(4)
-        println(raw_pt)
-        val pt_h = Array(Integer.parseInt(raw_pt.take(2), 16), Integer.parseInt(raw_pt.drop(2), 16))
-        val bc = raw_pt.drop(4).take(4).toInt
-        println(bc)
+        val raw = dists.split("x")(1).drop(8)
+        val pt2 = raw.take(2)
+        val pt1 = raw.drop(2).take(2)
+        val bc = raw.drop(4).take(2).toInt
+        val pt_h = Array(Integer.parseInt(pt1, 16), Integer.parseInt(pt2, 16))
         return (bc , (1, pt_h))
     }
 
@@ -106,21 +79,29 @@ class Mapper[T <: Data, S <: Data](inBundle : T, outBundle : S) extends Module {
     val eucDist = Vec.fill(c){Module(new EucDistBlock(n, w)).io}
     val closeCent = Module( new ClosestCentreN(c, w)).io
 
-    eucDist(0).point := io.rx_dat("int")
-    eucDist(1).point := io.rx_dat("int")
-    eucDist(2).point := io.rx_dat("int")
+    eucDist(0).point(0) := io.rx_dat("int")
+    eucDist(1).point(0) := io.rx_dat("int")
+    eucDist(2).point(0) := io.rx_dat("int")
 
-    eucDist(0).centroid := io.rx_dat("c1")
+    eucDist(0).point(1) := io.rx_dat("int1")
+    eucDist(1).point(1) := io.rx_dat("int1")
+    eucDist(2).point(1) := io.rx_dat("int1")
+
+    eucDist(0).centroid(0) := io.rx_dat("c11")
+    eucDist(0).centroid(1) := io.rx_dat("c12")
     closeCent.in(0) := eucDist(0).out
 
-    eucDist(1).centroid := io.rx_dat("c2")
+    eucDist(1).centroid(0) := io.rx_dat("c21")
+    eucDist(1).centroid(1) := io.rx_dat("c22")
     closeCent.in(1) := eucDist(1).out
 
-    eucDist(2).centroid := io.rx_dat("c3")
+    eucDist(2).centroid(0) := io.rx_dat("c31")
+    eucDist(2).centroid(1) := io.rx_dat("c32")
     closeCent.in(2) := eucDist(2).out
 
     io.rx_rdy := Bool(true)
     io.tx_dat("int") := io.rx_dat("int")
+    io.tx_dat("int1") := io.rx_dat("int1")
     io.tx_dat("cent") := closeCent.out
 
     when(io.rx_val) {
@@ -137,15 +118,15 @@ class EucDistBlock(n : Int, w : Int) extends Module {
     private def sumDist(x : UInt, y : UInt) = (x + y)
 
     val io = new Bundle {
-        val point = UInt(INPUT, width = n*w)
-        val centroid = UInt(INPUT, width = n*w)
-        val out = UInt(OUTPUT, width = w)
+        val point = Vec.fill(n){UInt(INPUT, width = 64)}
+        val centroid = Vec.fill(n){UInt(INPUT, width = 64)}
+        val out = UInt(OUTPUT, width = 64)
     }
 
-    val distSum = Vec.fill(n){UInt(width = w)}
+    val distSum = Vec.fill(n){UInt(width = 64)}
 
     for (i <- 0 until n) {
-        distSum(i) := EucDist(io.point((i+1)*(w-1), i*w), io.centroid((i+1)*(w-1), i*w))
+        distSum(i) := EucDist(io.centroid(i), io.point(i))
     }
     io.out := distSum.reduceLeft(sumDist)
 }
@@ -155,23 +136,27 @@ class ClosestCentreN(c : Int, w : Int) extends Module {
     private def Min2(x : UInt, y : UInt) = Mux(x <= y, x, y)
 
     val io = new Bundle {
-        val in = Vec.fill(c){UInt(INPUT, w)}
-        val out = UInt(OUTPUT, w)
+        val in = Vec.fill(c){UInt(INPUT, 64)}
+        val out = UInt(OUTPUT, 64)
     }
     io.out := io.in.lastIndexWhere((x : UInt) => {io.in.reduceLeft(Min2) === x})
 }
 
-
 class inBundle() extends Bundle {
-	val int = UInt(width = 16)
-    val c1 = UInt(width = 16)
-    val c2 = UInt(width = 16)
-    val c3 = UInt(width = 16)
+	val int = UInt(width = 8)
+    val int1 = UInt(width = 8)
+    val c11 = UInt(width = 8)
+    val c12 = UInt(width = 8)
+    val c21 = UInt(width = 8)
+    val c22 = UInt(width = 8)
+    val c31 = UInt(width = 8)
+    val c32 = UInt(width = 8)
   override def clone = { new inBundle().asInstanceOf[this.type]}
 }
 
 class outBundle extends Bundle {
-	val int = UInt(width = 16)
+	val int = UInt(width = 8)
+    val int1 = UInt(width = 8)
     val cent = UInt(width = 8)
   override def clone = { new outBundle().asInstanceOf[this.type]}
 }
@@ -187,7 +172,7 @@ class encode[T <: Data](outBundle : T) extends Module {
 
   io.tx_val := Bool(false)
   io.rx_rdy := Bool(true)
-  io.tx_dat := Cat(io.rx_dat("cent"), UInt("h0000"), io.rx_dat("int"))
+  io.tx_dat := Cat(io.rx_dat("int1"), io.rx_dat("int"), io.rx_dat("cent"), UInt("hff"))
   when (io.rx_val) {
     io.tx_val := Bool(true)
   }
@@ -204,10 +189,14 @@ class decode[T <: Data](inBundle : T) extends Module {
 
   io.tx_val := Bool(false)
   io.rx_rdy := Bool(true)
-  io.tx_dat("int") := io.rx_dat(15,0)
-  io.tx_dat("c1") := io.rx_dat(31,16)
-  io.tx_dat("c2") := io.rx_dat(47,32)
-  io.tx_dat("c3") := io.rx_dat(63,48)
+  io.tx_dat("c11") := io.rx_dat(7,0)
+  io.tx_dat("c12") := io.rx_dat(15,8)
+  io.tx_dat("c21") := io.rx_dat(23,16)
+  io.tx_dat("c22") := io.rx_dat(31, 24)
+  io.tx_dat("c31") := io.rx_dat(39,32)
+  io.tx_dat("c32") := io.rx_dat(47,40)
+  io.tx_dat("int") := io.rx_dat(55, 48)
+  io.tx_dat("int1") := io.rx_dat(63, 56)
   when (io.rx_val) {
     io.tx_val := Bool(true)
   }

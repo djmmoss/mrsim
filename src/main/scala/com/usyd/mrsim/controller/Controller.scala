@@ -41,8 +41,9 @@ class Controller[T <: Data, S <: Data](
 	}
 
     io.tx_dat("int") := UInt(0)
+    io.tx_dat("int1") := UInt(0)
+    io.tx_dat("cent") := UInt(0)
 	io.tx_val := Bool(false)
-
 	// COUNTERS
 	val inCounter = Reg(init = UInt(0, UInt(n).getWidth))
 
