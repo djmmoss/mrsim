@@ -130,8 +130,9 @@ localTest:
 awsTest:
 	cd cluster_test; cp aws_build build.sbt
 	cd cluster_test; sbt assembly
-	#cd cluster_test; hadoop jar dd./target/scala-2.10/WordCountTest-assembly-1.0.jar words output1 scoobi
-	cd cluster_test; hadoop jar ./target/scala-2.10/ScoobiTest-assembly-1.0.jar LifeTest numbers output1 scoobi
+	#cd cluster_test; hadoop jar dd./target/scala-2.10/ScoobiTest-assembly-1.0.jar WordCountTest words output1 scoobi
+	#cd cluster_test; hadoop jar ./target/scala-2.10/ScoobiTest-assembly-1.0.jar LifeTest numbers output1 scoobi
+	cd cluster_test; hadoop jar ./target/scala-2.10/ScoobiTest-assembly-1.0.jar KMeansTest points output1 scoobi
 	cd cluster_test; cp loc_build build.sbt
 
 hkuTest:
@@ -175,6 +176,10 @@ hdfsWords:
 hdfsNumbers:
 	hadoop dfs -mkdir numbers &>/dev/null
 	hadoop dfs -copyFromLocal ./data/numbers/* numbers &>/dev/null
+
+hdfsPoints:
+	hadoop dfs -mkdir points &>/dev/null
+	hadoop dfs -copyFromLocal ./data/points/* points &>/dev/null
 
 
 

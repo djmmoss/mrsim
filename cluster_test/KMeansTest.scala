@@ -15,9 +15,6 @@ import scala.util._
 
 object KMeansTest extends ScoobiApp {
 
-  var curCenters: List[Array[Int]] = List(Array(43, 235), Array(154, 4), Array(156, 105))
-
-  var cost = 0
 
   /* -- Grab Points from File -- */
   // Need to modify this to accept a arbitrary number of features for each point
@@ -26,55 +23,33 @@ object KMeansTest extends ScoobiApp {
   def run() {
      val points: DList[String] = fromTextFile(args(0))
 
-    var prevCost = 0
-    val epslion = 10
-    var count = 0
-    var finish = true
-    var costList :List[Int] = List()
 
-    while (finish) {
-    
+      var curCenters : List[Array[Int]] = List()
 
-      var tempCenters : List[Array[Int]] = List()
-
-      prevCost = cost
-      cost = 0
       
       val bestCmap: DList[(Int, (Int, Array[Int]))] = points
         .map(classify)
         .groupByKey
         .combine(Reduction.apply(recenter))
 
-      bestCmap.persist.run.foreach(a => tempCenters :+= a._2._2)
+      bestCmap.persist.run.foreach(a => curCenters :+= a._2._2)
 
 
-      count = count + 1
-      if ((cost > prevCost || (cost - prevCost).abs  < epslion) && count > 1) {
-            cost = prevCost
-          finish = false
-    } else {
-        curCenters = tempCenters
-      costList:+= cost
-    
-    }
-    }
 
-    print("\nK-Means Finished with:" + "\n\tCost:\t\t" + cost)
-    print("\n\tCostList: \t")
-    costList.foreach(a => print(a + "\t"))
+    print("\nK-Means Finished")
     print("\n\tCenters:\t")
     curCenters.foreach(a => {print("\n\t\t\t")
     a.foreach(b => print(b.toString + "\t"))})
-    print("\n\tIterations:\t" + count + "\n")
 
   }
 
   def classify(in: String): (Int,(Int, Array[Int])) = {
-    val pt : Array[Int] = in.split(",").map(w => w.trim.toInt)
-    val dists = curCenters.map(ctr => ((ctr,pt).zipped map((a,b) => (a - b).abs)).sum)
+    val input = in.split(":").map(_.split(",").map(_.trim.toInt))
+    val center = input.drop(1)
+    val pt = input(0)
+    val dists = center.map(ctr => ((ctr,pt).zipped map((a,b) => (a - b).abs)).sum)
 
     val bc = dists.indexOf(dists.min ,0)
-    cost = cost + dists.min
 
 
     return (bc , (1, pt))
