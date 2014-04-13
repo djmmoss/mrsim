@@ -41,7 +41,6 @@ class Controller[T <: Data, S <: Data](
 	}
 
     io.tx_dat("int") := UInt(0)
-    io.tx_dat("cent") := UInt(0)
 	io.tx_val := Bool(false)
 
 	// COUNTERS

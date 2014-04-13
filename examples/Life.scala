@@ -5,7 +5,6 @@ import Reduction._
 import Chisel._
 import com.usyd.mrsim._
 
-import java.io._
 import scala.util.Random
 import scala.sys.process._
 
@@ -14,14 +13,14 @@ object Life extends ScoobiApp with MrSim {
 		val lines = fromTextFile(args(0))
 
 		val counts = lines
-            .map(w => LifeMapper(w.toInt))
+            .map(w => LifeMapper(w.toLong))
 		  .groupByKey
 		  .combine(Sum.int)
 		counts.toTextFile(args(1)).persist
 	}
 
-	def LifeMapper(w : Int) : (String, Int) = {
-        val out =  toHardware(false, Int.box(w) )
+	def LifeMapper(w : Long) : (String, Int) = {
+        val out =  toHardware(false, Long.box(w))
         (out, 1)
 	}
 }
@@ -108,14 +107,13 @@ class Mapper[T <: Data, S <: Data](inBundle : T, outBundle : S) extends Module {
     for (i <- 0 until n) {
       val cell = cells(j*n + i)
         val mapCells = numberOfNeighboursFor(j,i).map(w => w._1 + w._2*8).zipWithIndex
-        println(mapCells)
         mapCells.foreach(c => if(c._2 != 4) cell.io.nbrs(c._2) := cells(c._1).io.out else cell.io.nbrs(c._2) := Bool(false))
     }
   }
 
   io.rx_rdy := !is_full
 
-  when(counter(UInt(1)) === UInt(1)) {
+  when(counter(UInt(99)) === UInt(99)) {
     io.tx_dat("int") := check_out
     check_out := UInt(0)
     io.tx_val := Bool(true)
