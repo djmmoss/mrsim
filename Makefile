@@ -72,7 +72,7 @@ wordcountHardware: setupWordCount
 
 life: setupLife hardware
 	/tmp/start-sim.sh
-	$(SBT) "run-main com.usyd.mrsim.example.Life ./data/numbers/numbers_0.txt output"
+	$(SBT) "run-main com.usyd.mrsim.example.Life ./data/numbers_0.txt output"
 	/tmp/stop-sim.sh
 
 setupLife:
@@ -81,6 +81,23 @@ setupLife:
 testLifeHardware: setupLife testSim
 
 lifeHardware: setupLife
+	$(SBT) "run-main com.usyd.mrsim.sim.MrSimSimulation $(HARDFLAGS)"
+
+#===============================================#
+#------------------- KMeans --------------------#
+#===============================================#
+
+kmeans: setupKMeans hardware
+	/tmp/start-sim.sh
+	$(SBT) "run-main com.usyd.mrsim.example.KMeans ./data/points/points_0.txt output"
+	/tmp/stop-sim.sh
+
+setupKMeans:
+	cp examples/KMeans.scala ./src/main/scala/com/usyd/mrsim/.
+
+testKMeansHardware: setupLife testSim
+
+kmeansHardware: setupKMeans
 	$(SBT) "run-main com.usyd.mrsim.sim.MrSimSimulation $(HARDFLAGS)"
 
 #===============================================#
@@ -107,8 +124,8 @@ identityHardware: setupIdentity
 localTest:
 	cd cluster_test; cp loc_build build.sbt
 	#cd cluster_test; $(SBT) "run-main WordCountTest ../data/words_0.txt outputWord"
-	#cd cluster_test; $(SBT) "run-main LifeTest ../data/numbers/numbers_0.txt outputLife"
-	cd cluster_test; $(SBT) "run-main KMeansTest ../data/points/points_1.txt"
+	#cd cluster_test; $(SBT) "run-main LifeTest ../data/numbers/in.txt outputLife"
+	cd cluster_test; $(SBT) "run-main KMeansTest ../data/points/points_0.txt"
 
 awsTest:
 	cd cluster_test; cp aws_build build.sbt
@@ -178,3 +195,4 @@ clean:
 	$(RM) ./src/main/scala/com/usyd/mrsim/WordCount.scala
 	$(RM) ./src/main/scala/com/usyd/mrsim/Life.scala
 	$(RM) ./src/main/scala/com/usyd/mrsim/Identity.scala
+	$(RM) ./src/main/scala/com/usyd/mrsim/KMeans.scala

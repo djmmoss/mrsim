@@ -20,7 +20,7 @@ object WordCount extends ScoobiApp with MrSim {
 	}
 
 	def WordMapper(w : String) : (String, Int) = {
-        val ret = toHardware(w)
+        val ret = toHardware(false, w)
 		val res = ret.split("x")(1)
         val count = hexToInt(res.take(2))
         val word = hexToAscii(res.drop(2)).trim

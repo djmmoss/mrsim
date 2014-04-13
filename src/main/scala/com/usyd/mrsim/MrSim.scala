@@ -17,7 +17,7 @@ import scala.util.Random
 object np_test extends App with MrSim {
 	for(i <- 0 until 10000000) {
 		val num = Random.nextInt()
-		val res = toHardware(Int.box(num));
+		val res = toHardware(false, Int.box(num));
     print(".")
 	}
 }
@@ -31,12 +31,14 @@ trait MrSim extends hardwareTranslator {
 
   // Simulation Parameters
   val ctlFifo : Int = 4
-  val numMap : Int = 2
+  val numMap : Int = 1
   val simFifo: Int = 4
   val numRead: Int = 1
 
-  def toHardware[K,T](vals : AnyRef*) = {
-    writeHW(encode(vals, GBFIFOSize))
+  def toHardware[K,T](end : Boolean, vals : AnyRef*) = {
+   val wr = if(!end) encode(vals, GBFIFOSize) else vals.mkString
+    println(wr)
+   writeHW(wr.toString)
     decode(readHW())
   }
 

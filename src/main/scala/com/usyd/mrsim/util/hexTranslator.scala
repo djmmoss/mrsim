@@ -7,7 +7,7 @@ trait hexTranslator {
   def toHex[T](in : T, size : Int): String = 
     in match {
       case x: String => asciiToHex(x, size)
-      case x: Int => intToHex(x, size-4)
+      case x: Int => intToHex(x, size-1)
       case x: Long => longToHex(x, size-2)
       case x: Float => floatToHex(x, size)
       case x: Double => doubleToHex(x, size)

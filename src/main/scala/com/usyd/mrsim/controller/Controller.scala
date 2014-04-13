@@ -41,6 +41,7 @@ class Controller[T <: Data, S <: Data](
 	}
 
     io.tx_dat("int") := UInt(0)
+    io.tx_dat("cent") := UInt(0)
 	io.tx_val := Bool(false)
 
 	// COUNTERS
@@ -105,20 +106,20 @@ class Controller[T <: Data, S <: Data](
 
 
 class ControllerTests(c : Controller[inBundle, outBundle]) extends Tester(c) {
-	for (i <- 1 until 105) {
-		val id = Random.nextInt(1000)
-		if (i < 100) {
-			val num = i
-			poke(c.io.rx_dat.int, num) 
-			poke(c.io.rx_val, 1)
-			peek(c.io.tx_dat.int)
-		} else {
-			val num = 0
-			poke(c.io.rx_dat.int, num)
-			poke(c.io.rx_val, 1)
-		}
-		step(1)
-	}
+    for (i <- 1 until 105) {
+        val id = Random.nextInt(1000)
+        if (i < 100) {
+            val num = i
+            poke(c.io.rx_dat.int, num) 
+            poke(c.io.rx_val, 1)
+            peek(c.io.tx_dat.int)
+        } else {
+            val num = 0
+            poke(c.io.rx_dat.int, num)
+            poke(c.io.rx_val, 1)
+        }
+        step(1)
+    }
 }
 
 object Controller {
