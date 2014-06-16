@@ -72,7 +72,7 @@ wordcountHardware: setupWordCount
 
 life: setupLife hardware
 	/tmp/start-sim.sh
-	$(SBT) "run-main com.usyd.mrsim.example.Life ./data/numbers_0.txt output"
+	$(SBT) "run-main com.usyd.mrsim.example.Life ./data/numbers/* output"
 	/tmp/stop-sim.sh
 
 setupLife:

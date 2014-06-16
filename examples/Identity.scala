@@ -20,7 +20,7 @@ object Identity extends ScoobiApp with MrSim {
 	}
 
 	def IdentityMapper(w : String) : (String, Int) = {
-		(toHardware(w), 1)
+		(toHardware(false, w), 1)
 	}
 }
  
