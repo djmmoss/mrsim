@@ -1,9 +1,9 @@
 import scala.util.Random
 
 object LifeNoDis extends App {
-    val n = Random.nextInt()
+    val n = 831083598
     val res = lifeMap(n.toBinaryString)
-    println("Input: " + n.toBinaryString)
+    println("Input: " + n.toHexString)
     println("Output: " + res._1)
 
 
@@ -12,7 +12,7 @@ def lifeMap(in : String) : (String, Int) = {
     var civilization = new Civilization(initialMatrix, 8)
 
     civilization.printGrid
-    for (period <- 1 to 99) {
+    for (period <- 1 to 100) {
         civilization = civilization.tick
     }
     val out = civilization.printGrid.drop(1)
