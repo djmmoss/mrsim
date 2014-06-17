@@ -8,11 +8,15 @@ class LifeHardwareTests(c: Mapper[inBundle, outBundle]) extends Tester(c) {
     poke(c.io.rx_val, 1)
     step(1)
     poke(c.io.rx_val, 0)
-    for (i <- 0 until 100) {
-        step(1)
-        peek(c.io.tx_dat.int)
-        peek(c.io.tx_val)
-    }
+    expect(c.io.tx_val, 0)
+    step(1)
+    expect(c.io.tx_val, 0)
+    step(1)
+    expect(c.io.tx_dat.int, 865820326989202446L)
+    expect(c.io.tx_val, 1)
+    step(1)
+    expect(c.io.rx_rdy, 1)
+    expect(c.io.tx_val, 0)
 }
 
 object LifeHardware {
@@ -115,8 +119,19 @@ class Mapper[T <: Data, S <: Data](inBundle : T, outBundle : S) extends Module {
         }
     }
 
-    io.rx_rdy := Bool(true)
-    io.tx_val := Bool(true)
+    io.tx_val := Bool(false)
+    io.rx_rdy := !is_full
+    when(io.rx_val) {
+        is_full := Bool(true)
+    }
+
+
+    when(is_full) {
+        when((counter(UInt(1)) === UInt(1))) {
+            io.tx_val := Bool(true)
+            is_full := Bool(false)
+        }
+    }
     io.tx_dat("int") := out.toBits().toUInt()
 }
 
@@ -136,9 +151,10 @@ class encode[T <: Data](outBundle : T) extends Module {
         val rx_val = Bool(INPUT)
         val tx_dat = UInt(OUTPUT, width = 64)
         val tx_val = Bool(OUTPUT)
+
     }
 
-    io.tx_val := Mux(io.rx_val, Bool(false), Bool(true))
+    io.tx_val := Mux(io.rx_val, Bool(true), Bool(false))
     io.tx_dat := io.rx_dat("int")
 }
 
@@ -146,10 +162,11 @@ class decode[T <: Data](inBundle : T) extends Module {
     val io = new Bundle {
         val rx_dat = UInt(INPUT, width = 64)
         val rx_val = Bool(INPUT)
+        val rx_rdy = Bool(OUTPUT)
         val tx_dat = inBundle.clone.asOutput
         val tx_val = Bool(OUTPUT)
     }
-
-    io.tx_val := Mux(io.rx_val, Bool(false), Bool(true))
+    io.rx_rdy := Bool(true)
+    io.tx_val := Mux(io.rx_val, Bool(true), Bool(false))
     io.tx_dat("int") := io.rx_dat
 }

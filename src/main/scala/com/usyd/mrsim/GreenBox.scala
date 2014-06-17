@@ -21,8 +21,8 @@ class GreenBox[T <: Data, S <: Data](inBundle : T, outBundle : S) extends Module
     }
 
     // INPUT & OUTPUT FIFO - SIZE 4
-    val in_fifo = Module(new Fifo(UInt(width = 64), 4)).io
-    val out_fifo = Module(new Fifo(UInt(width = 64), 4)).io
+    val in_fifo = Module(new Fifo(inBundle.clone, 4)).io
+    val out_fifo = Module(new Fifo(outBundle.clone, 4)).io
 
     // ENCODE AND DECODE MODULES - per-Application
     val data_encode = Module(new encode(outBundle.clone)).io
@@ -38,70 +38,120 @@ class GreenBox[T <: Data, S <: Data](inBundle : T, outBundle : S) extends Module
     // map.tx_dat - (OUTPUT) OUTPUT DATA
     // map.tx_val - (OUTPUT) VALID OUTPUT
 
-    // IN --> INFIFO
-    in_fifo.enq_dat := io.enq_dat
-    in_fifo.enq_val := io.enq_val
-    io.enq_rdy := in_fifo.enq_rdy
+    // IN --> DECODE
+    data_decode.rx_dat := io.enq_dat
+    data_decode.rx_val := io.enq_val
 
-    // INFIFO --> DECODE
-    data_decode.rx_dat := in_fifo.deq_dat
-    data_decode.rx_val := in_fifo.deq_val
-    in_fifo.deq_rdy := (in_fifo.deq_val && map.rx_rdy)
+    // INFIFO ENQ_READY -- IF DECODE AND FIFO ARE READY
+    io.enq_rdy := data_decode.rx_rdy && in_fifo.enq_rdy
 
-    // DECODE --> MAP
-    map.rx_dat := data_decode.tx_dat
-    map.rx_val := data_decode.tx_val
+    // DECODE --> INFIFO
+    in_fifo.enq_dat := data_decode.tx_dat
+    in_fifo.enq_val := data_decode.tx_val
 
-    // MAP --> ENCODE
-    data_encode.rx_dat := map.tx_dat
-    data_encode.rx_val := map.tx_val
+    // INFIFO DEQ_VAL -- IF MAPPER IS READY
+    in_fifo.deq_rdy := map.rx_rdy
 
-    // ENCODE --> OUTFIFO
-    out_fifo.enq_dat := data_encode.tx_dat
-    out_fifo.enq_val := data_encode.tx_val
+    // INFIFO --> MAP
+    map.rx_dat := in_fifo.deq_dat
+    map.rx_val := in_fifo.deq_val && map.rx_rdy
 
-    // OUTFIFO --> OUT
-    io.deq_dat := out_fifo.deq_dat
-    io.deq_val := out_fifo.deq_val
+    // MAP --> OUTFIFO
+    out_fifo.enq_dat := map.tx_dat
+    out_fifo.enq_val := map.tx_val
+
+    // OUTFIFO --> ENCODE
+    data_encode.rx_dat := out_fifo.deq_dat
+    data_encode.rx_val := out_fifo.deq_val
+
+    // OUTFIFO DEQ_VAL -- IF READY TO TAKE OUTPUT
     out_fifo.deq_rdy := io.deq_rdy
+
+    // ENCODE --> OUT
+    io.deq_dat := data_encode.tx_dat
+    io.deq_val := data_encode.tx_val
 }
 
 class GreenBoxTests(c: GreenBox[inBundle, outBundle]) extends Tester(c) {
     val in = 0x3189544e
     poke(c.io.enq_dat, in)
     poke(c.io.enq_val, 1)
+    poke(c.io.deq_rdy, 1)
     step(1)
     poke(c.io.enq_val, 0)
-    poke(c.io.deq_rdy, 1)
-    peek(c.io.deq_dat)
-    peek(c.io.deq_val)
-    peek(c.map.rx_dat)
-    peek(c.map.rx_val)
+    expect(c.io.deq_dat, 0)
+    expect(c.io.deq_val, 0)
     peek(c.in_fifo.deq_dat)
+    peek(c.in_fifo.deq_val)
+    peek(c.map.rx_rdy)
     step(1)
-    poke(c.io.deq_rdy, 1)
-    peek(c.io.deq_dat)
-    peek(c.io.deq_val)
-    peek(c.map.rx_dat)
-    peek(c.map.rx_val)
+    expect(c.io.deq_dat, 0)
+    expect(c.io.deq_val, 0)
     peek(c.in_fifo.deq_dat)
+    peek(c.in_fifo.deq_val)
+    peek(c.map.rx_rdy)
     step(1)
-    poke(c.io.deq_rdy, 1)
-    peek(c.io.deq_dat)
-    peek(c.io.deq_val)
-    peek(c.map.tx_dat)
-    peek(c.out_fifo.enq_dat)
+    poke(c.io.enq_val, 1)
+    expect(c.io.deq_dat, 0)
+    expect(c.io.deq_val, 0)
+    peek(c.in_fifo.deq_dat)
+    peek(c.in_fifo.deq_val)
+    peek(c.map.rx_rdy)
     step(1)
-    poke(c.io.deq_rdy, 1)
-    peek(c.io.deq_dat)
-    peek(c.io.deq_val)
-    peek(c.map.tx_dat)
-    peek(c.out_fifo.enq_dat)
+    poke(c.io.enq_val, 1)
+    expect(c.io.deq_dat, 0)
+    expect(c.io.deq_val, 0)
+    peek(c.in_fifo.deq_dat)
+    peek(c.in_fifo.deq_val)
+    peek(c.map.rx_rdy)
+    step(1)
+    poke(c.io.enq_val, 0)
+    expect(c.io.deq_dat, 865820326989202446L)
+    expect(c.io.deq_val, 1)
+    peek(c.in_fifo.deq_dat)
+    peek(c.in_fifo.deq_val)
+    peek(c.map.rx_rdy)
+    step(1)
+    expect(c.io.deq_dat, 0)
+    expect(c.io.deq_val, 0)
+    peek(c.in_fifo.deq_dat)
+    peek(c.in_fifo.deq_val)
+    peek(c.map.rx_rdy)
+    step(1)
+    expect(c.io.deq_dat, 0)
+    expect(c.io.deq_val, 0)
+    peek(c.in_fifo.deq_dat)
+    peek(c.in_fifo.deq_val)
+    peek(c.map.rx_rdy)
+    step(1)
+    expect(c.io.deq_dat, 865820326989202446L)
+    expect(c.io.deq_val, 1)
+    peek(c.in_fifo.deq_dat)
+    peek(c.in_fifo.deq_val)
+    peek(c.map.rx_rdy)
+    step(1)
+    expect(c.io.deq_dat, 0)
+    expect(c.io.deq_val, 0)
+    peek(c.in_fifo.deq_dat)
+    peek(c.in_fifo.deq_val)
+    peek(c.map.rx_rdy)
+    step(1)
+    expect(c.io.deq_dat, 0)
+    expect(c.io.deq_val, 0)
+    peek(c.in_fifo.deq_dat)
+    peek(c.in_fifo.deq_val)
+    peek(c.map.rx_rdy)
+    step(1)
+    expect(c.io.deq_dat, 865820326989202446L)
+    expect(c.io.deq_val, 1)
+    peek(c.in_fifo.deq_dat)
+    peek(c.in_fifo.deq_val)
+    peek(c.map.rx_rdy)
 }
 
 object GreenBox {
     def main(args: Array[String]) : Unit = {
-        chiselMainTest(Array("--genHarness", "--test", "--compile"), () => Module(new GreenBox(new inBundle, new outBundle))) {
+        chiselMainTest(args, () => Module(new GreenBox(new inBundle, new outBundle))) {
             c => new GreenBoxTests(c)
         }
     }
